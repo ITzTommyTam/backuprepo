@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Đố vui đếm giờ – Tin học 12 (Bài 9 & 10)</title>
+<style>
+  :root {
+    --bg: #f0f4f8;
+    --card: #ffffff;
+    --primary: #1a56db;
+    --primary-dark: #1e3a8a;
+    --correct: #059669;
+    --wrong: #dc2626;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 12px;
+    line-height: 1.45;
+  }
+  .container { max-width: 480px; margin: 0 auto; }
+  .header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 4px 12px rgba(26,86,219,0.25);
+  }
+  .header h1 { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
+  .header p { font-size: 0.85rem; opacity: 0.9; }
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+    margin-top: 10px;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-outline {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+  }
+  .progress-bar {
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 10px 0 6px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 4px;
+    transition: width 0.3s;
+  }
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.95);
+    margin-bottom: 4px;
+  }
+  .timer {
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+  .timer.warning { color: #fbbf24; }
+  .timer.danger { color: #fca5a5; animation: pulse 0.8s infinite; }
+  @keyframes pulse { 50% { opacity: 0.6; } }
+  .lesson-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #e0e7ff;
+    color: #3730a3;
+    margin-bottom: 10px;
+  }
+  .q-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    word-break: break-word;
+  }
+  .code-block {
+    background: #f1f5f9;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: ui-monospace, "Consolas", monospace;
+    font-size: 0.82rem;
+    margin: 8px 0 14px;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    line-height: 1.4;
+  }
+  .statement {
+    background: #f8fafc;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .statement.correct-bg { border-color: var(--correct); background: #d1fae5; }
+  .statement.wrong-bg { border-color: var(--wrong); background: #fee2e2; }
+  .stmt-text {
+    font-size: 0.92rem;
+    margin-bottom: 10px;
+    word-break: break-word;
+  }
+  .stmt-text code, .stmt-text .tag {
+    font-family: ui-monospace, Consolas, monospace;
+    font-weight: 600;
+    background: #e2e8f0;
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+  .choice-row {
+    display: flex;
+    gap: 8px;
+  }
+  .choice-btn {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: white;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .choice-btn:active { transform: scale(0.97); }
+  .choice-btn.selected-dung { border-color: var(--correct); background: #d1fae5; color: #065f46; }
+  .choice-btn.selected-sai { border-color: var(--wrong); background: #fee2e2; color: #991b1b; }
+  .choice-btn:disabled { cursor: default; opacity: 0.95; }
+  .choice-btn.reveal-correct { border-color: var(--correct); background: #d1fae5; color: #065f46; }
+  .choice-btn.reveal-wrong { border-color: var(--wrong); background: #fee2e2; color: #991b1b; opacity: 0.7; }
+  .feedback {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.ok { background: #d1fae5; color: #065f46; }
+  .feedback.bad { background: #fee2e2; color: #991b1b; }
+  .score-big {
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: var(--primary);
+    text-align: center;
+    margin: 12px 0;
+  }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    font-size: 1rem;
+    margin: 8px 0 14px;
+    background: white;
+  }
+  .footer-note {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- START -->
+  <div id="startScreen" class="screen active">
+    <div class="header">
+      <h1>🎮 Đố vui đếm giờ</h1>
+      <p>Tin học 12 – Bài 9 & Bài 10 (Đúng/Sai)</p>
+    </div>
+    <div class="card">
+      <p style="margin-bottom:10px;font-weight:600;">Phạm vi câu hỏi:</p>
+      <select id="lessonFilter">
+        <option value="all">Tất cả (10 câu – Bài 9 + Bài 10)</option>
+        <option value="9">Chỉ Bài 9 (5 câu)</option>
+        <option value="10">Chỉ Bài 10 (5 câu)</option>
+      </select>
+      <p style="margin:12px 0 6px;font-weight:600;">Thời gian làm bài:</p>
+      <select id="timeSelect">
+        <option value="300">5 phút</option>
+        <option value="600" selected>10 phút</option>
+        <option value="900">15 phút</option>
+      </select>
+      <button class="btn btn-primary" onclick="startGame()">Bắt đầu chơi</button>
+    </div>
+    <p class="footer-note">Mỗi câu có 4 ý a–b–c–d. Chọn Đúng hoặc Sai cho từng ý.<br>Câu hỏi được xáo trộn mỗi lần chơi.</p>
+  </div>
+
+  <!-- GAME -->
+  <div id="gameScreen" class="screen">
+    <div class="header">
+      <div class="meta">
+        <span id="progressText">Câu 1 / 10</span>
+        <span class="timer" id="timerDisplay">10:00</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div style="font-size:0.85rem;margin-top:4px">Điểm: <strong id="scoreDisplay">0</strong> / <span id="maxScore">40</span></div>
+    </div>
+    <div class="card">
+      <div class="lesson-badge" id="lessonBadge">Bài 9</div>
+      <div class="q-title" id="questionTitle"></div>
+      <div id="codeArea" class="code-block" style="display:none"></div>
+      <div id="statementsArea"></div>
+      <div class="feedback" id="feedbackBox"></div>
+      <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()">Kiểm tra đáp án</button>
+      <button class="btn btn-primary" id="nextBtn" style="display:none" onclick="nextQuestion()">Câu tiếp theo →</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="resultScreen" class="screen">
+    <div class="header">
+      <h1>🎉 Kết quả</h1>
+      <p>Chúc mừng bạn đã hoàn thành!</p>
+    </div>
+    <div class="card" style="text-align:center">
+      <div class="score-big" id="finalScore">0/40</div>
+      <p id="finalPercent" style="font-size:1.15rem;font-weight:600;margin-bottom:8px"></p>
+      <p id="encourageMsg" style="color:var(--muted);margin-bottom:16px"></p>
+      <button class="btn btn-primary" onclick="location.reload()">Chơi lại</button>
+      <button class="btn btn-outline" onclick="backToStart()">Về màn hình chính</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== 10 câu Đúng/Sai từ file đính kèm (không thêm/sửa) =====
+const ALL_QUESTIONS = [
+  // ----- Bài 9 -----
+  {
+    lesson: 9,
+    title: "Cho đoạn mã HTML tạo danh sách các loài hoa yêu thích như sau:",
+    code: "<body>\n<h2>Bài 2 – Danh sách không thứ tự</h2>\n<p><strong>Các loài hoa yêu thích</strong></p>\n<ul>\n  <li>Hoa hồng</li>\n  <li>Hoa cúc</li>\n  <li>Hoa hướng dương</li>\n</ul>\n</body>",
+    statements: [
+      { text: "Đoạn mã trên sử dụng thẻ <ul> để tạo danh sách có thứ tự.", correct: false },
+      { text: "Thẻ <li> được sử dụng để định nghĩa từng phần tử trong danh sách.", correct: true },
+      { text: "Khi hiển thị trên trình duyệt, các phần tử \"Hoa hồng\", \"Hoa cúc\", \"Hoa hướng dương\" sẽ được đánh số thứ tự tự động là 1, 2, 3.", correct: false },
+      { text: "Nếu muốn đổi kiểu ký hiệu đầu dòng của danh sách trên thành hình vuông mà không đổi cấu trúc thẻ, ta có thể thêm thuộc tính type=\"square\" vào thẻ <ul>.", correct: true }
+    ]
+  },
+  {
+    lesson: 9,
+    title: "Về các thẻ tạo danh sách trong HTML:",
+    code: null,
+    statements: [
+      { text: "Cặp thẻ <ul>...</ul> được sử dụng để tạo danh sách có thứ tự.", correct: false },
+      { text: "Cặp thẻ <ol>...</ol> tạo danh sách không có thứ tự và mặc định hiển thị dấu chấm đầu dòng.", correct: false },
+      { text: "Trong danh sách mô tả <dl>, thẻ <dt> dùng để khai báo thuật ngữ/tên mục; thẻ <dd> dùng để chứa nội dung mô tả chi tiết.", correct: true },
+      { text: "Để tạo một danh sách có thứ tự bắt đầu bằng số 2 và kiểu ký hiệu là chữ cái hoa (A, B, C...), ta khai báo thẻ mở là <ol start=\"2\" type=\"A\">.", correct: true }
+    ]
+  },
+  {
+    lesson: 9,
+    title: "Cho đoạn mã HTML tạo bảng lịch học như sau:",
+    code: "<table>\n<tr><th>Ngày</th><th>Thời gian</th><th>Nội dung</th></tr>\n<tr><td rowspan=\"2\">Thứ Hai</td><td>15h - 16h</td><td>Lý thuyết HTML</td></tr>\n<tr><td>16h - 17h</td><td>Thực hành HTML</td></tr>\n<tr><td>Thứ Ba</td><td colspan=\"2\">Nghỉ học</td></tr>\n</table>",
+    statements: [
+      { text: "Phần tiêu đề cột của bảng (\"Ngày\", \"Thời gian\", \"Nội dung\") được đặt trong các thẻ <td>.", correct: false },
+      { text: "Thẻ <table> được dùng để chứa phần dữ liệu chính của bảng.", correct: true },
+      { text: "Ô \"Thứ Hai\" sử dụng rowspan=\"2\" nên sẽ chiếm độ cao tương ứng với 2 hàng trong bảng.", correct: true },
+      { text: "Ở hàng của \"Thứ Ba\", thuộc tính colspan=\"2\" trong ô \"Nghỉ học\" giúp gộp 2 cột (\"Thời gian\" và \"Nội dung\") lại làm một ô duy nhất.", correct: true }
+    ]
+  },
+  {
+    lesson: 9,
+    title: "Về các thẻ và thuộc tính tạo bảng trong HTML:",
+    code: null,
+    statements: [
+      { text: "Trong HTML, thẻ <tr> được sử dụng để tạo một hàng trong bảng.", correct: true },
+      { text: "Thẻ <th> được sử dụng để khai báo ô tiêu đề của bảng.", correct: true },
+      { text: "Để tạo tiêu đề chung cho bảng, ta có thể sử dụng thẻ <h1>.", correct: false },
+      { text: "Thuộc tính colspan=\"2\" gộp 2 ô theo chiều ngang (trên cùng một hàng), còn rowspan=\"2\" gộp 2 ô theo chiều dọc (trên cùng một cột).", correct: true }
+    ]
+  },
+  {
+    lesson: 9,
+    title: "Xét đoạn mã HTML hiển thị thuật ngữ Tin học dưới đây:",
+    code: "<dl>\n  <dt>HTML</dt>\n  <dd>Ngôn ngữ đánh dấu siêu văn bản</dd>\n  <dt>CSS</dt>\n  <dd>Ngôn ngữ định kiểu cho trang web</dd>\n</dl>",
+    statements: [
+      { text: "Thẻ <dl> khai báo một danh sách mô tả.", correct: true },
+      { text: "Các từ \"HTML\" và \"CSS\" được đặt trong cặp thẻ <dt>...</dt>.", correct: true },
+      { text: "Đoạn mã hiển thị hai thuật ngữ \"HTML\" và \"CSS\" kèm theo phần giải nghĩa tương ứng nằm ngay bên dưới/sâu vào trong.", correct: true },
+      { text: "Nếu thay thế cặp thẻ <dl>...</dl> bằng <ol>...</ol> và thay <dt>, <dd> bằng <li>, trình duyệt vẫn hiển thị ĐÚNG cấu trúc danh sách mô tả thuật ngữ.", correct: false }
+    ]
+  },
+  // ----- Bài 10 -----
+  {
+    lesson: 10,
+    title: "Về các trường hợp và cách thức tạo liên kết trong HTML:",
+    code: null,
+    statements: [
+      { text: "Để nhảy đến một vị trí cụ thể trong cùng một trang web, ta dùng cú pháp href=\"#id\" với id là tên định danh của thành phần đích.", correct: true },
+      { text: "Ta có viết lệnh: <a href=\"thong_tin.html\"> <img src=\"anh.png\"></a> để tạo một liên kết bằng hình ảnh.", correct: true },
+      { text: "Khi tạo liên kết tới file ở thư mục cha (thư mục cấp trên chứa thư mục hiện tại), giá trị thuộc tính href sử dụng ký hiệu ../tenfile.html.", correct: true },
+      { text: "Để liên kết tới địa chỉ website chính thức của trường THPT ABC trên Internet, khai báo <a href=\"thptabc.edu.vn\">Website trường</a> là hoàn toàn đúng cú pháp đường dẫn tuyệt đối.", correct: false }
+    ]
+  },
+  {
+    lesson: 10,
+    title: "Bạn Lan thiết kế liên kết giữa trang chủ lớp (index.html) và trang thời khóa biểu (thoikhoabieu.html) nằm trong cùng một thư mục:",
+    code: "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<title>Trang chủ lớp 12A</title>\n</head>\n<body>\n<h2>Chào mừng đến với trang chủ lớp 12A</h2>\n<a href=\"thoikhoabieu.html\">Xem thời khóa biểu</a>\n</body>\n</html>",
+    statements: [
+      { text: "Giá trị thoikhoabieu.html trong thuộc tính href là một đường dẫn tuyệt đối.", correct: false },
+      { text: "Đoạn mã hiển thị dòng chữ \"Xem thời khóa biểu\" làm nội dung của liên kết.", correct: true },
+      { text: "Vì hai file index.html và thoikhoabieu.html nằm trong cùng một thư mục, việc sử dụng tên file làm giá trị href giúp mở đúng trang thời khóa biểu khi bấm vào dòng chữ.", correct: true },
+      { text: "Nếu file thoikhoabieu.html được chuyển vào thư mục con có tên là cac_trang, Lan phải đổi giá trị href là href=\"cac_trang/thoikhoabieu.html\".", correct: true }
+    ]
+  },
+  {
+    lesson: 10,
+    title: "Học sinh Minh muốn viết mã HTML cho trang web cá nhân để truy cập website trường THPT Quang Trung:",
+    code: "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<title>Trang cá nhân của Minh</title>\n</head>\n<body>\n<h1>Trang web cá nhân</h1>\n<p>Nhấp vào liên kết dưới đây để xem tin tức:</p>\n<a href=\"https://thptquangtrung.hcm.edu.vn/\">Website trường THPT Quang Trung</a>\n</body>\n</html>",
+    statements: [
+      { text: "Đoạn mã hiển thị dòng chữ \"Website trường THPT Quang Trung\" làm nội dung của liên kết.", correct: true },
+      { text: "Thuộc tính href nhận giá trị là một đường dẫn tuyệt đối trên Internet.", correct: true },
+      { text: "Khi người dùng nhấp chuột vào dòng chữ \"Website trường THPT Quang Trung\", trình duyệt sẽ điều hướng đến trang web https://thptquangtrung.hcm.edu.vn/", correct: true },
+      { text: "Nếu thay href=\"https://thptquangtrung.hcm.edu.vn/\" bằng href=\"thptquangtrung.hcm.edu.vn/\", trình duyệt vẫn truy cập thành công đến website của trường ngoài Internet.", correct: false }
+    ]
+  },
+  {
+    lesson: 10,
+    title: "Bạn Huy thiết kế trang web cho CLB Bóng rổ với yêu cầu nhấp vào liên kết ở đầu trang để cuộn nhanh xuống bảng lịch tập ở dưới:",
+    code: "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<title>CLB Bóng rổ</title>\n</head>\n<body>\n<a href=\"#lichtap\">📅 Lịch tập luyện</a>\n<br><br><br>\n<h2 id=\"lichtap\">Lịch tập luyện CLB Bóng rổ</h2>\n<table border=\"1\">\n<tr><th>Ngày</th><th>Thời gian</th><th>Địa điểm</th></tr>\n<tr><td>Thứ 3</td><td>16:00</td><td>Sân trường</td></tr>\n</table>\n</body>\n</html>",
+    statements: [
+      { text: "Thẻ <h2> chứa thuộc tính id=\"lichtap\" để đánh dấu vị trí đích đến trong trang.", correct: true },
+      { text: "Thẻ <a> sử dụng thuộc tính href=\"#lichtap\" để tạo liên kết trong cùng một trang.", correct: true },
+      { text: "Khi nhấp vào thẻ <a> chứa đoạn chữ \"📅 Lịch tập luyện\", trình duyệt sẽ tự động cuộn màn hình tới phần tiêu đề <h2> có id tương ứng.", correct: true },
+      { text: "Để liên kết hoạt động đúng, giá trị của thuộc tính href trong thẻ <a> và giá trị thuộc tính id trong thẻ <h2> phải viết hoàn toàn giống hệt nhau (bao gồm cả dấu #, ví dụ: <h2 id=\"#lichtap\">).", correct: false }
+    ]
+  },
+  {
+    lesson: 10,
+    title: "Về khái niệm siêu văn bản và thẻ tạo liên kết trong HTML:",
+    code: null,
+    statements: [
+      { text: "Trong HTML, thẻ <a> cùng thuộc tính href được sử dụng để tạo liên kết.", correct: true },
+      { text: "Đường dẫn tuyệt đối ghi đầy đủ giao thức (như http:// hoặc https://), tên miền và đường dẫn đến tài liệu.", correct: true },
+      { text: "Đường dẫn tuyệt đối mô tả vị trí tài liệu dựa trên vị trí file hiện tại, thường được dùng để liên kết tới các trang web khác ngoài Internet.", correct: false },
+      { text: "Để liên kết tới file thong_tin.html nằm trong thư mục con data so với file hiện tại, giá trị của thuộc tính href cần khai báo là href=\"data/thong_tin.html\".", correct: true }
+    ]
+  }
+];
+
+let questions = [];
+let current = 0;
+let score = 0; // số ý đúng
+let userAnswers = []; // null | true | false for each statement
+let answered = false;
+let timerInterval = null;
+let timeLeft = 600;
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function startGame() {
+  const filter = document.getElementById('lessonFilter').value;
+  timeLeft = parseInt(document.getElementById('timeSelect').value, 10);
+
+  if (filter === '9') questions = ALL_QUESTIONS.filter(q => q.lesson === 9);
+  else if (filter === '10') questions = ALL_QUESTIONS.filter(q => q.lesson === 10);
+  else questions = [...ALL_QUESTIONS];
+
+  // shuffle questions and statements inside each
+  questions = shuffle(questions).map(q => ({
+    ...q,
+    statements: shuffle([...q.statements])
+  }));
+
+  current = 0;
+  score = 0;
+  answered = false;
+
+  document.getElementById('maxScore').textContent = questions.length * 4;
+  document.getElementById('startScreen').classList.remove('active');
+  document.getElementById('resultScreen').classList.remove('active');
+  document.getElementById('gameScreen').classList.add('active');
+
+  updateTimerDisplay();
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      finishGame();
+    }
+  }, 1000);
+
+  showQuestion();
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timeLeft / 60);
+  const s = timeLeft % 60;
+  const el = document.getElementById('timerDisplay');
+  el.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+  el.className = 'timer';
+  if (timeLeft <= 60) el.classList.add('danger');
+  else if (timeLeft <= 180) el.classList.add('warning');
+}
+
+function showQuestion() {
+  answered = false;
+  userAnswers = [null, null, null, null];
+  const q = questions[current];
+
+  document.getElementById('progressText').textContent = `Câu ${current + 1} / ${questions.length}`;
+  document.getElementById('progressFill').style.width = `${(current / questions.length) * 100}%`;
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('lessonBadge').textContent = `Bài ${q.lesson}`;
+  document.getElementById('questionTitle').textContent = q.title;
+
+  const codeArea = document.getElementById('codeArea');
+  if (q.code) {
+    codeArea.style.display = 'block';
+    codeArea.textContent = q.code;
+  } else {
+    codeArea.style.display = 'none';
+  }
+
+  const area = document.getElementById('statementsArea');
+  area.innerHTML = '';
+  q.statements.forEach((st, idx) => {
+    const div = document.createElement('div');
+    div.className = 'statement';
+    div.id = `stmt-${idx}`;
+    div.innerHTML = `
+      <div class="stmt-text"><strong>${String.fromCharCode(97 + idx)})</strong> ${escapeHtml(st.text)}</div>
+      <div class="choice-row">
+        <button class="choice-btn" id="dung-${idx}" onclick="choose(${idx}, true)">Đúng</button>
+        <button class="choice-btn" id="sai-${idx}" onclick="choose(${idx}, false)">Sai</button>
+      </div>
+    `;
+    area.appendChild(div);
+  });
+
+  document.getElementById('feedbackBox').className = 'feedback';
+  document.getElementById('feedbackBox').textContent = '';
+  document.getElementById('submitBtn').style.display = 'block';
+  document.getElementById('nextBtn').style.display = 'none';
+}
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function choose(idx, isDung) {
+  if (answered) return;
+  userAnswers[idx] = isDung;
+  const dungBtn = document.getElementById(`dung-${idx}`);
+  const saiBtn = document.getElementById(`sai-${idx}`);
+  dungBtn.className = 'choice-btn' + (isDung ? ' selected-dung' : '');
+  saiBtn.className = 'choice-btn' + (!isDung ? ' selected-sai' : '');
+}
+
+function submitAnswer() {
+  if (answered) return;
+  if (userAnswers.some(a => a === null)) {
+    alert('Em hãy chọn Đúng hoặc Sai cho tất cả 4 ý trước khi kiểm tra!');
+    return;
+  }
+  answered = true;
+  const q = questions[current];
+  let correctCount = 0;
+
+  q.statements.forEach((st, idx) => {
+    const isCorrect = userAnswers[idx] === st.correct;
+    if (isCorrect) correctCount++;
+    const stmtDiv = document.getElementById(`stmt-${idx}`);
+    stmtDiv.classList.add(isCorrect ? 'correct-bg' : 'wrong-bg');
+
+    const dungBtn = document.getElementById(`dung-${idx}`);
+    const saiBtn = document.getElementById(`sai-${idx}`);
+    dungBtn.disabled = true;
+    saiBtn.disabled = true;
+
+    // reveal correct answer
+    if (st.correct) {
+      dungBtn.classList.add('reveal-correct');
+      if (!userAnswers[idx]) saiBtn.classList.add('reveal-wrong');
+    } else {
+      saiBtn.classList.add('reveal-correct');
+      if (userAnswers[idx]) dungBtn.classList.add('reveal-wrong');
+    }
+  });
+
+  score += correctCount;
+  document.getElementById('scoreDisplay').textContent = score;
+
+  const fb = document.getElementById('feedbackBox');
+  if (correctCount === 4) {
+    fb.className = 'feedback show ok';
+    fb.textContent = '✅ Xuất sắc! Cả 4 ý đều đúng.';
+  } else {
+    fb.className = 'feedback show bad';
+    fb.textContent = `❌ Đúng ${correctCount}/4 ý. Hãy xem lại đáp án được tô màu.`;
+  }
+
+  document.getElementById('submitBtn').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'block';
+  document.getElementById('progressFill').style.width = `${((current + 1) / questions.length) * 100}%`;
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) finishGame();
+  else showQuestion();
+}
+
+function finishGame() {
+  if (timerInterval) clearInterval(timerInterval);
+  document.getElementById('gameScreen').classList.remove('active');
+  document.getElementById('resultScreen').classList.add('active');
+
+  const total = questions.length * 4;
+  const percent = total ? Math.round((score / total) * 100) : 0;
+  document.getElementById('finalScore').textContent = `${score}/${total}`;
+  document.getElementById('finalPercent').textContent = `Tỉ lệ đúng: ${percent}%`;
+
+  let msg = '';
+  if (percent >= 90) msg = 'Xuất sắc! Em nắm rất vững kiến thức danh sách, bảng và liên kết! 🌟';
+  else if (percent >= 70) msg = 'Tốt lắm! Em đã hiểu khá chắc các kiến thức cơ bản. 💪';
+  else if (percent >= 50) msg = 'Khá ổn! Hãy ôn lại một số phần còn yếu nhé. 📚';
+  else msg = 'Cố gắng hơn nữa nhé! Ôn lại lý thuyết và chơi lại để tiến bộ. 💡';
+  document.getElementById('encourageMsg').textContent = msg;
+}
+
+function backToStart() {
+  if (timerInterval) clearInterval(timerInterval);
+  document.getElementById('resultScreen').classList.remove('active');
+  document.getElementById('startScreen').classList.add('active');
+}
+</script>
+</body>
+</html>
